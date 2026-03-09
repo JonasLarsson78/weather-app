@@ -99,9 +99,7 @@ export const useWeatherPanel = () => {
   }
 
   const clearSavedCity = () => {
-    savedCity.value = undefined
     city.value = ''
-    data.value = undefined
   }
 
   const addCurrentCityToFavorites = () => {

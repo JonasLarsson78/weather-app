@@ -53,12 +53,13 @@
       </header>
 
       <form class="city-form" @submit.prevent="fetchWeather">
-        <input v-model="city" class="city-input" type="text" placeholder="Ange stad, t.ex. Helsingborg">
+        <input ref="cityInputEl" v-model="city" class="city-input" type="text"
+          placeholder="Ange stad, t.ex. Helsingborg">
         <button class="city-button" type="submit" :disabled="pending">
           Hämta väder
         </button>
         <button class="city-button city-button--secondary city-button--compact" type="button" title="Rensa sparad stad"
-          @click="clearSavedCity">
+          @click="handleClearCity">
           Rensa
         </button>
       </form>
@@ -121,8 +122,14 @@ const {
 } = useWeatherPanel()
 
 const favoritesListEl = ref<HTMLElement | null>(null)
+const cityInputEl = ref<HTMLInputElement | null>(null)
 const showFavoritesScrollHint = ref(false)
 let favoritesResizeObserver: ResizeObserver | undefined
+
+const handleClearCity = () => {
+  clearSavedCity()
+  cityInputEl.value?.focus()
+}
 
 const updateFavoritesScrollHint = () => {
   const listElement = favoritesListEl.value
