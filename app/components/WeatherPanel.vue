@@ -41,14 +41,12 @@
         <h2 class="forecast-title">Timprognos</h2>
         <div class="forecast-strip-wrap">
           <div class="forecast-strip">
-            <article v-for="item in next12" :key="item.validTime" class="forecast-card">
-              <p class="forecast-card__time">{{ 'kl ' + formatForecastTime(item.validTime) }}</p>
-              <i :class="['forecast-icon', item.icon?.value || 'wi wi-na']"
-                :style="{ color: resolveIconColor(item.icon?.color) }" aria-hidden="true" />
-              <p class="forecast-card__temp">{{ item.temperature.value }} {{ item.temperature.unit }}</p>
-              <p class="forecast-card__meta">Vind {{ item.windSpeed.value }} {{ item.windSpeed.unit }}</p>
-              <p class="forecast-card__meta">Fukt {{ item.humidity.value }} {{ item.humidity.unit }}</p>
-            </article>
+            <ForecastCard v-for="item in next12" :key="item.validTime"
+              :time-label="'kl ' + formatForecastTime(item.validTime)" :icon-class="item.icon?.value || 'wi wi-na'"
+              :icon-color="resolveIconColor(item.icon?.color)"
+              :temperature="`${item.temperature.value} ${item.temperature.unit}`"
+              :wind="`Vind ${item.windSpeed.value} ${item.windSpeed.unit}`"
+              :humidity="`Fukt ${item.humidity.value} ${item.humidity.unit}`" />
           </div>
           <p class="forecast-scroll-hint" aria-hidden="true">
             <span>←</span>
@@ -62,124 +60,25 @@
 </template>
 
 <script setup lang="ts">
-type Metric = {
-  value: number
-  unit: string
-}
+import ForecastCard from '~/components/ForecastCard.vue'
 
-type WeatherIcon = {
-  value: string
-  color?: string
-}
-
-type ForecastItem = {
-  validTime: string
-  icon?: WeatherIcon
-  temperature: Metric
-  windSpeed: Metric
-  humidity: Metric
-  pressure: Metric
-}
-
-type WeatherResponse = {
-  city: string
-  approvedTime: string
-  referenceTime: string
-  current: {
-    validTime: string
-    average: {
-      icon?: WeatherIcon
-      temperature: Metric
-      windSpeed: Metric
-      humidity: Metric
-      pressure: Metric
-    }
-  }
-  forecast: ForecastItem[]
-}
-
-const savedCity = useCookie<string | undefined>('weather-last-city')
-const city = ref(savedCity.value?.trim() || '')
-
-const { data, pending, error, execute } = await useFetch<WeatherResponse>('/api/weather', {
-  query: computed(() => ({ city: city.value })),
-  immediate: false,
-  server: false,
-  watch: false,
-})
-
-const weather = computed(() => data.value ?? null)
-const next12 = computed(() => weather.value?.forecast?.slice(0, 12) ?? [])
-const displayCity = computed(() => weather.value?.city || city.value || '—')
-const currentTemperature = computed(() => weather.value?.current?.average?.temperature.value ?? '--')
-const currentUnit = computed(() => weather.value?.current?.average?.temperature.unit ?? '')
-const currentIconClass = computed(() => {
-  return weather.value?.current?.average?.icon?.value || weather.value?.forecast?.[0]?.icon?.value || 'wi wi-na'
-})
-const resolveIconColor = (color?: string) => {
-  return color?.trim() || '#fde68a'
-}
-const currentIconColor = computed(() => {
-  return resolveIconColor(weather.value?.current?.average?.icon?.color || weather.value?.forecast?.[0]?.icon?.color)
-})
-
-const seasonBackgroundStyle = computed(() => {
-  const referenceDate = weather.value?.referenceTime
-    ? new Date(weather.value.referenceTime)
-    : new Date()
-
-  const month = Number.isNaN(referenceDate.getTime())
-    ? new Date().getMonth() + 1
-    : referenceDate.getMonth() + 1
-
-  const season = month === 12 || month <= 2
-    ? 'winter'
-    : month >= 3 && month <= 5
-      ? 'spring'
-      : month >= 6 && month <= 8
-        ? 'summer'
-        : 'autumn'
-
-  return {
-    backgroundImage: `linear-gradient(165deg, #0f172a3d 0%, #1e3a8a33 100%), url('/seasons/${season}.svg')`,
-  }
-})
-
-const formatForecastTime = (value: string) => {
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return new Intl.DateTimeFormat('sv-SE', {
-    timeZone: 'Europe/Stockholm',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(date)
-}
-
-const fetchWeather = async () => {
-  const normalizedCity = city.value.trim()
-
-  if (normalizedCity.length > 0) {
-    city.value = normalizedCity
-    savedCity.value = normalizedCity
-  }
-
-  await execute()
-}
-
-const clearSavedCity = () => {
-  savedCity.value = undefined
-  city.value = ''
-  data.value = undefined
-}
-
-onMounted(() => {
-  fetchWeather()
-})
+const {
+  city,
+  pending,
+  error,
+  weather,
+  next12,
+  displayCity,
+  currentTemperature,
+  currentUnit,
+  currentIconClass,
+  currentIconColor,
+  seasonBackgroundStyle,
+  formatForecastTime,
+  resolveIconColor,
+  fetchWeather,
+  clearSavedCity,
+} = useWeatherPanel()
 </script>
 
 <style scoped lang="scss">
@@ -366,43 +265,6 @@ onMounted(() => {
   padding-bottom: 0.35rem;
 }
 
-.forecast-card {
-  background: #0f172a40;
-  border: 1px solid #bfdbfe4d;
-  border-radius: 12px;
-  min-height: 132px;
-  padding: 0.7rem;
-  text-shadow: 0 2px 8px #02061780;
-
-  p {
-    margin: 0;
-  }
-}
-
-.forecast-card__time {
-  color: #dbeafe;
-  font-size: 1rem;
-  margin-bottom: 0.5rem !important;
-  text-transform: capitalize;
-  font-weight: 700;
-}
-
-.forecast-card__temp {
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin: 0.25rem 0;
-}
-
-.forecast-card__meta {
-  color: #dbeafe;
-  font-size: 0.78rem;
-}
-
-.forecast-icon {
-  font-size: 2rem !important;
-  margin-top: 0.25rem;
-}
-
 @media (max-width: 768px) {
   .forecast-strip {
     gap: 0.55rem;
@@ -433,29 +295,12 @@ onMounted(() => {
     }
   }
 
-  .forecast-card {
-    min-height: 120px;
-    padding: 0.6rem;
-    scroll-snap-align: start;
-  }
 }
 
 @media (max-width: 480px) {
   .forecast-strip {
     gap: 0.5rem;
     grid-auto-columns: minmax(130px, 1fr);
-  }
-
-  .forecast-card__time {
-    font-size: 0.75rem;
-  }
-
-  .forecast-card__temp {
-    font-size: 1rem;
-  }
-
-  .forecast-card__meta {
-    font-size: 0.72rem;
   }
 }
 </style>
