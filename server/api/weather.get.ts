@@ -10,6 +10,12 @@ export default defineEventHandler(async (event) => {
     typeof query.city === 'string' && query.city.trim().length > 0
       ? query.city.trim()
       : ''
+  const days = typeof query.days === 'string' && query.days.trim().length > 0
+    ? query.days.trim()
+    : undefined
+
+  const queryParams: Record<string, any> = { city }
+  if (days) queryParams.days = days
 
   if (!config.public.weatherApiBase) {
     throw createError({
@@ -25,11 +31,12 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const baseUrl = `${config.public.weatherApiBase}/weather`
+  const basePath = `${config.public.weatherApiBase}/weather`
+  const baseUrl = days ? `${basePath}/forecast` : basePath
 
   try {
     const data = await $fetch(baseUrl, {
-      query: { city },
+      query: queryParams,
       cache: 'no-store',
       headers: {
         Authorization: `Bearer ${config.weatherApiKey}`,
@@ -67,7 +74,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     const data = await $fetch(baseUrl, {
-      query: { city },
+      query: queryParams,
       cache: 'no-store',
       headers: {
         'x-api-key': config.weatherApiKey,

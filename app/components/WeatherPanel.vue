@@ -92,6 +92,10 @@
             <span>→</span>
           </p>
         </div>
+
+        <h2 class="forecast-title">7-dagarsprognos</h2>
+        <ForecastList :city="city" />
+
       </section>
     </div>
   </section>
@@ -99,6 +103,7 @@
 
 <script setup lang="ts">
 import ForecastCard from '~/components/ForecastCard.vue'
+import ForecastList from './ForecastList.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const {
