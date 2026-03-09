@@ -1,6 +1,8 @@
 <template>
   <Header />
-  <WeatherPanel />
+  <main>
+    <WeatherPanel />
+  </main>
 </template>
 
 <script setup lang="ts">

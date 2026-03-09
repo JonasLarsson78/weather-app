@@ -5,6 +5,9 @@ export default defineNuxtConfig({
   css: ['~/assets/main.scss'],
   app: {
     head: {
+      htmlAttrs: {
+        lang: 'sv',
+      },
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon/favicon.ico' },
         { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon/favicon-32x32.png' },
