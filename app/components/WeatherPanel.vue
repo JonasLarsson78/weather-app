@@ -465,6 +465,17 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
+  .weather-panel {
+    display: flex;
+    min-height: calc(100dvh - 2rem);
+  }
+
+  .weather-shell {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+  }
+
   .city-form {
     display: grid;
     gap: 0.5rem;
