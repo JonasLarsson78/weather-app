@@ -125,10 +125,15 @@ export const useWeatherPanel = () => {
   const fetchWeather = async () => {
     const normalizedCity = formatCityName(city.value)
 
-    if (normalizedCity.length > 0) {
-      city.value = normalizedCity
-      savedCity.value = normalizedCity
+    if (!normalizedCity) {
+      city.value = ''
+      data.value = undefined
+      ;(error as any).value = null
+      return
     }
+
+    city.value = normalizedCity
+    savedCity.value = normalizedCity
 
     await execute()
   }
