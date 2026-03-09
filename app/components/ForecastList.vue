@@ -1,5 +1,6 @@
 <template>
   <div class="forecast-list">
+    <Loader v-if="loading" message="Laddar prognoser..." />
     <div v-for="(day, idx) in forecast" :key="idx" class="forecast-day">
       <button class="day-header" @click="toggle(idx)">
         <span>{{ formatDate(day.date) }}</span>
@@ -28,6 +29,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
+import Loader from './Loader.vue'
 
 const props = defineProps<{ city?: string; days?: number }>()
 
@@ -49,6 +51,7 @@ interface ForecastDay {
 
 const forecast = ref<ForecastDay[]>([])
 const openIndex = ref<number | null>(null)
+const loading = ref(false)
 
 function toggle(idx: number) {
   openIndex.value = openIndex.value === idx ? null : idx
@@ -67,6 +70,7 @@ async function fetchForecast() {
   if (!city) return
 
   try {
+    loading.value = true
     const res = await fetch(`/api/weather?city=${encodeURIComponent(city)}&days=${days}`)
     if (!res.ok) return
     const data = await res.json()
@@ -132,6 +136,9 @@ async function fetchForecast() {
     }
   } catch (e) {
     console.error('Forecast fetch failed', e)
+  }
+  finally {
+    loading.value = false
   }
 }
 

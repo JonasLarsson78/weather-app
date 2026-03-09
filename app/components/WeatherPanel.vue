@@ -64,7 +64,7 @@
         </button>
       </form>
 
-      <p v-if="pending" class="status">Laddar väder...</p>
+      <Loader v-if="pending" message="Laddar väder..." />
       <div v-else-if="error" class="status-card status-card--error" role="status" aria-live="polite">
         <p class="status-card__title">{{ errorTitle }}</p>
         <p class="status-card__text">{{ errorMessage }}</p>
@@ -104,6 +104,7 @@
 <script setup lang="ts">
 import ForecastCard from '~/components/ForecastCard.vue'
 import ForecastList from './ForecastList.vue'
+import Loader from './Loader.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const {
