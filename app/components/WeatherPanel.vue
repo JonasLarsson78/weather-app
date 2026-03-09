@@ -4,7 +4,7 @@
       <header class="hero">
         <p class="hero__city">{{ displayCity }}</p>
         <div class="hero__main">
-          <i :class="['hero__icon', currentIconClass]" aria-hidden="true" />
+          <i :class="['hero__icon', currentIconClass]" :style="{ color: currentIconColor }" aria-hidden="true" />
           <p class="hero__temp">{{ currentTemperature }}<span>{{ currentUnit }}</span></p>
         </div>
 
@@ -43,7 +43,8 @@
           <div class="forecast-strip">
             <article v-for="item in next12" :key="item.validTime" class="forecast-card">
               <p class="forecast-card__time">{{ 'kl ' + formatForecastTime(item.validTime) }}</p>
-              <i :class="['forecast-icon', item.icon?.value || 'wi wi-na']" aria-hidden="true" />
+              <i :class="['forecast-icon', item.icon?.value || 'wi wi-na']"
+                :style="{ color: resolveIconColor(item.icon?.color) }" aria-hidden="true" />
               <p class="forecast-card__temp">{{ item.temperature.value }} {{ item.temperature.unit }}</p>
               <p class="forecast-card__meta">Vind {{ item.windSpeed.value }} {{ item.windSpeed.unit }}</p>
               <p class="forecast-card__meta">Fukt {{ item.humidity.value }} {{ item.humidity.unit }}</p>
@@ -68,6 +69,7 @@ type Metric = {
 
 type WeatherIcon = {
   value: string
+  color?: string
 }
 
 type ForecastItem = {
@@ -113,6 +115,12 @@ const currentTemperature = computed(() => weather.value?.current?.average?.tempe
 const currentUnit = computed(() => weather.value?.current?.average?.temperature.unit ?? '')
 const currentIconClass = computed(() => {
   return weather.value?.current?.average?.icon?.value || weather.value?.forecast?.[0]?.icon?.value || 'wi wi-na'
+})
+const resolveIconColor = (color?: string) => {
+  return color?.trim() || '#fde68a'
+}
+const currentIconColor = computed(() => {
+  return resolveIconColor(weather.value?.current?.average?.icon?.color || weather.value?.forecast?.[0]?.icon?.color)
 })
 
 const seasonBackgroundStyle = computed(() => {
