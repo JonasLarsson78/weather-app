@@ -2,8 +2,7 @@
   <section class="weather-panel">
     <div class="weather-shell" :style="seasonBackgroundStyle">
       <button v-if="!favoriteCities.length" class="city-star city-star--corner" type="button"
-        :disabled="!city.trim() || !!error || isCityNotFoundError"
-        :aria-pressed="isCurrentCityFavorite"
+        :disabled="!city.trim() || !!error || isCityNotFoundError" :aria-pressed="isCurrentCityFavorite"
         :title="isCurrentCityFavorite ? 'Ta bort från favoriter' : 'Lägg till i favoriter'"
         @click="toggleCurrentCityFavorite">
         {{ isCurrentCityFavorite ? '★' : '☆' }}
@@ -28,8 +27,7 @@
         </p>
         <hr v-if="favoriteCities.length > 0" class="favorites__divider">
         <button class="city-star city-star--below-divider" type="button"
-          :disabled="!city.trim() || !!error || isCityNotFoundError"
-          :aria-pressed="isCurrentCityFavorite"
+          :disabled="!city.trim() || !!error || isCityNotFoundError" :aria-pressed="isCurrentCityFavorite"
           :title="isCurrentCityFavorite ? 'Ta bort från favoriter' : 'Lägg till i favoriter'"
           @click="toggleCurrentCityFavorite">
           {{ isCurrentCityFavorite ? '★' : '☆' }}
