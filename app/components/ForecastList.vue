@@ -56,7 +56,9 @@ function toggle(idx: number) {
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr)
-  return d.toLocaleDateString('sv-SE', { weekday: 'long', month: 'short', day: 'numeric' })
+  const formatted = d.toLocaleDateString('sv-SE', { weekday: 'long', month: 'short', day: 'numeric' })
+  if (!formatted) return formatted
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1)
 }
 
 async function fetchForecast() {
