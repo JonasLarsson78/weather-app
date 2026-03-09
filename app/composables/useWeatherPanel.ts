@@ -167,6 +167,10 @@ export const useWeatherPanel = () => {
   }
 
   const toggleCurrentCityFavorite = () => {
+    if (isCityNotFoundError.value) {
+      return
+    }
+
     const normalizedCity = formatCityName(city.value)
 
     if (!normalizedCity) {
