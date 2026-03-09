@@ -27,6 +27,41 @@ export const useWeatherPanel = () => {
   const weather = computed(() => data.value ?? null)
   const next12 = computed(() => weather.value?.forecast?.slice(0, 12) ?? [])
   const displayCity = computed(() => weather.value?.city || city.value || '—')
+  const rawErrorMessage = computed(() => {
+    const currentError = error.value as any
+
+    return currentError?.data?.statusMessage
+      || currentError?.data?.message
+      || currentError?.statusMessage
+      || ''
+  })
+  const isCityNotFoundError = computed(() => {
+    const currentError = error.value as any
+    const statusCode = Number(
+      currentError?.statusCode
+      || currentError?.status
+      || currentError?.response?.status
+      || currentError?.data?.statusCode,
+    )
+    const normalizedMessage = rawErrorMessage.value.toLowerCase()
+
+    return statusCode === 404
+      || normalizedMessage.includes('not found')
+      || normalizedMessage.includes('hittades inte')
+  })
+  const weatherErrorMessage = computed(() => {
+    if (isCityNotFoundError.value) {
+      const searchedCity = city.value.trim()
+
+      if (searchedCity) {
+        return `Vi kunde inte hitta \"${searchedCity}\". Kontrollera stavningen och försök igen.`
+      }
+
+      return 'Vi kunde inte hitta den staden. Kontrollera stavningen och försök igen.'
+    }
+
+    return 'Kunde inte hämta väderdata just nu. Försök igen om en stund.'
+  })
   const favoriteCities = computed(() => favoriteCitiesCookie.value ?? [])
   const currentCityNormalized = computed(() => city.value.trim().toLowerCase())
   const isCurrentCityFavorite = computed(() => {
@@ -158,6 +193,8 @@ export const useWeatherPanel = () => {
     weather,
     next12,
     displayCity,
+    isCityNotFoundError,
+    weatherErrorMessage,
     currentTemperature,
     currentUnit,
     currentIconClass,

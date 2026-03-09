@@ -65,7 +65,10 @@
       </form>
 
       <p v-if="pending" class="status">Laddar väder...</p>
-      <p v-else-if="error" class="status status--error">Kunde inte hämta väderdata.</p>
+      <div v-else-if="error" class="status-card status-card--error" role="status" aria-live="polite">
+        <p class="status-card__title">{{ errorTitle }}</p>
+        <p class="status-card__text">{{ errorMessage }}</p>
+      </div>
 
       <section v-else-if="weather" class="forecast">
         <div class="weather-meta">
@@ -96,7 +99,7 @@
 
 <script setup lang="ts">
 import ForecastCard from '~/components/ForecastCard.vue'
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const {
   city,
@@ -115,6 +118,8 @@ const {
   fetchWeather,
   clearSavedCity,
   favoriteCities,
+  isCityNotFoundError,
+  weatherErrorMessage,
   isCurrentCityFavorite,
   removeFavoriteCity,
   selectFavoriteCity,
@@ -125,6 +130,14 @@ const favoritesListEl = ref<HTMLElement | null>(null)
 const cityInputEl = ref<HTMLInputElement | null>(null)
 const showFavoritesScrollHint = ref(false)
 let favoritesResizeObserver: ResizeObserver | undefined
+
+const errorTitle = computed(() => {
+  return isCityNotFoundError.value ? 'Staden hittades inte' : 'Kunde inte hämta väderdata'
+})
+
+const errorMessage = computed(() => {
+  return weatherErrorMessage.value
+})
 
 const handleClearCity = () => {
   clearSavedCity()
@@ -429,6 +442,28 @@ onBeforeUnmount(() => {
 
 .status--error {
   color: #fee2e2;
+}
+
+.status-card {
+  border-radius: 10px;
+  margin: 0.5rem 0 1rem;
+  padding: 0.65rem 0.75rem;
+  text-shadow: 0 2px 8px #02061799;
+}
+
+.status-card--error {
+  background: #7f1d1d66;
+  border: 1px solid #fecaca66;
+  color: #fee2e2;
+}
+
+.status-card__title {
+  font-weight: 700;
+  margin: 0;
+}
+
+.status-card__text {
+  margin: 0.2rem 0 0;
 }
 
 .weather-meta {
