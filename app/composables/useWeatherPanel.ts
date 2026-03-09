@@ -2,7 +2,20 @@ import type { WeatherResponse } from '~/types/weather'
 
 export const useWeatherPanel = () => {
   const savedCity = useCookie<string | undefined>('weather-last-city')
+  const favoriteCitiesCookie = useCookie<string[]>('weather-favorite-cities', {
+    default: () => [],
+  })
   const city = ref(savedCity.value?.trim() || '')
+
+  const formatCityName = (value: string) => {
+    const trimmedValue = value.trim()
+
+    if (!trimmedValue) {
+      return ''
+    }
+
+    return trimmedValue.charAt(0).toLocaleUpperCase('sv-SE') + trimmedValue.slice(1).toLocaleLowerCase('sv-SE')
+  }
 
   const { data, pending, error, execute } = useFetch<WeatherResponse>('/api/weather', {
     query: computed(() => ({ city: city.value })),
@@ -14,6 +27,15 @@ export const useWeatherPanel = () => {
   const weather = computed(() => data.value ?? null)
   const next12 = computed(() => weather.value?.forecast?.slice(0, 12) ?? [])
   const displayCity = computed(() => weather.value?.city || city.value || '—')
+  const favoriteCities = computed(() => favoriteCitiesCookie.value ?? [])
+  const currentCityNormalized = computed(() => city.value.trim().toLowerCase())
+  const isCurrentCityFavorite = computed(() => {
+    if (!currentCityNormalized.value) {
+      return false
+    }
+
+    return favoriteCities.value.some((favoriteCity) => favoriteCity.toLowerCase() === currentCityNormalized.value)
+  })
   const currentTemperature = computed(() => weather.value?.current?.average?.temperature.value ?? '--')
   const currentUnit = computed(() => weather.value?.current?.average?.temperature.unit ?? '')
   const currentIconClass = computed(() => {
@@ -66,7 +88,7 @@ export const useWeatherPanel = () => {
   }
 
   const fetchWeather = async () => {
-    const normalizedCity = city.value.trim()
+    const normalizedCity = formatCityName(city.value)
 
     if (normalizedCity.length > 0) {
       city.value = normalizedCity
@@ -80,6 +102,51 @@ export const useWeatherPanel = () => {
     savedCity.value = undefined
     city.value = ''
     data.value = undefined
+  }
+
+  const addCurrentCityToFavorites = () => {
+    const normalizedCity = formatCityName(city.value)
+
+    if (!normalizedCity) {
+      return
+    }
+
+    const alreadyExists = favoriteCities.value.some((favoriteCity) => {
+      return favoriteCity.toLowerCase() === normalizedCity.toLowerCase()
+    })
+
+    if (alreadyExists) {
+      return
+    }
+
+    favoriteCitiesCookie.value = [...favoriteCities.value, normalizedCity]
+  }
+
+  const removeFavoriteCity = (cityToRemove: string) => {
+    favoriteCitiesCookie.value = favoriteCities.value.filter((favoriteCity) => {
+      return favoriteCity.toLowerCase() !== cityToRemove.toLowerCase()
+    })
+  }
+
+  const toggleCurrentCityFavorite = () => {
+    const normalizedCity = formatCityName(city.value)
+
+    if (!normalizedCity) {
+      return
+    }
+
+    if (isCurrentCityFavorite.value) {
+      removeFavoriteCity(normalizedCity)
+      return
+    }
+
+    addCurrentCityToFavorites()
+  }
+
+  const selectFavoriteCity = async (favoriteCity: string) => {
+    city.value = favoriteCity
+    savedCity.value = favoriteCity
+    await fetchWeather()
   }
 
   onMounted(() => {
@@ -102,5 +169,11 @@ export const useWeatherPanel = () => {
     resolveIconColor,
     fetchWeather,
     clearSavedCity,
+    favoriteCities,
+    isCurrentCityFavorite,
+    addCurrentCityToFavorites,
+    removeFavoriteCity,
+    selectFavoriteCity,
+    toggleCurrentCityFavorite,
   }
 }

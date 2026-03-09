@@ -1,10 +1,16 @@
 <template>
-  <header class="site-header">
+  <header class="site-header" v-if="props.show">
     <div class="site-header__inner">
       <h1 class="site-header__title">Väderöversikt</h1>
     </div>
   </header>
 </template>
+
+<script setup lang="ts">
+const props = defineProps<{
+  show: boolean
+}>()
+</script>
 
 <style scoped lang="scss">
 .site-header {

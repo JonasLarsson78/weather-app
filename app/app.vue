@@ -1,5 +1,5 @@
 <template>
-  <Header />
+  <Header :show="false" />
   <WeatherPanel />
 </template>
 

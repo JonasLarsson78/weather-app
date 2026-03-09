@@ -1,6 +1,40 @@
 <template>
   <section class="weather-panel">
     <div class="weather-shell" :style="seasonBackgroundStyle">
+      <button v-if="!favoriteCities.length" class="city-star city-star--corner" type="button" :disabled="!city.trim()"
+        :aria-pressed="isCurrentCityFavorite"
+        :title="isCurrentCityFavorite ? 'Ta bort från favoriter' : 'Lägg till i favoriter'"
+        @click="toggleCurrentCityFavorite">
+        {{ isCurrentCityFavorite ? '★' : '☆' }}
+      </button>
+
+      <div v-if="favoriteCities.length" class="favorites">
+        <div ref="favoritesListEl" class="favorites__list">
+          <div v-for="favoriteCity in favoriteCities" :key="favoriteCity" class="favorite-pill">
+            <button class="favorite-pill__city" type="button" @click="selectFavoriteCity(favoriteCity)">
+              {{ favoriteCity }}
+            </button>
+            <button class="favorite-pill__remove" type="button" title="Ta bort favorit"
+              @click="removeFavoriteCity(favoriteCity)">
+              ×
+            </button>
+          </div>
+        </div>
+        <p v-if="showFavoritesScrollHint" class="favorites-scroll-hint" aria-hidden="true">
+          <span>←</span>
+          Scrolla
+          <span>→</span>
+        </p>
+        <hr v-if="favoriteCities.length > 0" class="favorites__divider">
+        <button class="city-star city-star--below-divider" type="button" :disabled="!city.trim()"
+          :aria-pressed="isCurrentCityFavorite"
+          :title="isCurrentCityFavorite ? 'Ta bort från favoriter' : 'Lägg till i favoriter'"
+          @click="toggleCurrentCityFavorite">
+          {{ isCurrentCityFavorite ? '★' : '☆' }}
+        </button>
+
+      </div>
+
       <header class="hero">
         <p class="hero__city">{{ displayCity }}</p>
         <div class="hero__main">
@@ -61,6 +95,7 @@
 
 <script setup lang="ts">
 import ForecastCard from '~/components/ForecastCard.vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const {
   city,
@@ -78,7 +113,63 @@ const {
   resolveIconColor,
   fetchWeather,
   clearSavedCity,
+  favoriteCities,
+  isCurrentCityFavorite,
+  removeFavoriteCity,
+  selectFavoriteCity,
+  toggleCurrentCityFavorite,
 } = useWeatherPanel()
+
+const favoritesListEl = ref<HTMLElement | null>(null)
+const showFavoritesScrollHint = ref(false)
+let favoritesResizeObserver: ResizeObserver | undefined
+
+const updateFavoritesScrollHint = () => {
+  const listElement = favoritesListEl.value
+
+  if (!listElement) {
+    showFavoritesScrollHint.value = false
+    return
+  }
+
+  showFavoritesScrollHint.value = listElement.scrollWidth - listElement.clientWidth > 1
+}
+
+watch(favoriteCities, async () => {
+  await nextTick()
+  updateFavoritesScrollHint()
+}, { immediate: true })
+
+watch(favoritesListEl, async (newElement, previousElement) => {
+  if (favoritesResizeObserver && previousElement) {
+    favoritesResizeObserver.unobserve(previousElement)
+  }
+
+  if (favoritesResizeObserver && newElement) {
+    favoritesResizeObserver.observe(newElement)
+  }
+
+  await nextTick()
+  updateFavoritesScrollHint()
+})
+
+onMounted(() => {
+  if (typeof ResizeObserver !== 'undefined') {
+    favoritesResizeObserver = new ResizeObserver(() => {
+      updateFavoritesScrollHint()
+    })
+
+    if (favoritesListEl.value) {
+      favoritesResizeObserver.observe(favoritesListEl.value)
+    }
+  }
+
+  updateFavoritesScrollHint()
+})
+
+onBeforeUnmount(() => {
+  favoritesResizeObserver?.disconnect()
+})
 </script>
 
 <style scoped lang="scss">
@@ -183,10 +274,48 @@ const {
 
 .city-input,
 .city-button {
+  box-sizing: border-box;
   border: 1px solid #bfdbfe;
   border-radius: 8px;
   font: inherit;
   padding: 0.55rem 0.8rem;
+}
+
+.city-star {
+  align-items: center;
+  background: #0f172a80;
+  border: 1px solid #dbeafe99;
+  border-radius: 999px;
+  color: #fde68a;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 1.2rem;
+  justify-content: center;
+  line-height: 1;
+  min-height: 38px;
+  min-width: 38px;
+  padding: 0.35rem;
+}
+
+.city-star--corner {
+  position: absolute;
+  right: 1rem;
+  top: 0.85rem;
+  z-index: 2;
+}
+
+.city-star--below-divider {
+  display: flex;
+  margin: 0.35rem 0 0 auto;
+}
+
+.city-star[aria-pressed='false'] {
+  color: #dbeafe;
+}
+
+.city-star:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .city-input {
@@ -215,6 +344,76 @@ const {
 .city-button--compact {
   min-width: auto;
   padding-inline: 0.65rem;
+}
+
+.favorites {
+  margin: -0.3rem 0 0.9rem;
+}
+
+.favorites__label {
+  color: #dbeafe;
+  font-size: 0.85rem;
+  margin: 0 0 0.4rem;
+  text-shadow: 0 2px 8px #02061799;
+}
+
+.favorites__list {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.45rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding-bottom: 0.25rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.favorite-pill {
+  align-items: center;
+  background: #0f172a66;
+  border: 1px solid #dbeafe55;
+  border-radius: 999px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+
+.favorite-pill__city,
+.favorite-pill__remove {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: #eff6ff;
+  cursor: pointer;
+  font: inherit;
+  line-height: 1;
+}
+
+.favorite-pill__city {
+  padding: 0.4rem 0.55rem 0.4rem 0.65rem;
+}
+
+.favorite-pill__remove {
+  border-left: 1px solid #dbeafe44;
+  color: #bfdbfe;
+  font-size: 1.05rem;
+  padding: 0.36rem 0.52rem 0.42rem;
+}
+
+.favorites-scroll-hint {
+  align-items: center;
+  color: #dbeafe;
+  display: flex;
+  font-size: 0.78rem;
+  gap: 0.55rem;
+  justify-content: center;
+  margin: 0.2rem 0 0;
+  opacity: 0.92;
+  text-shadow: 0 2px 8px #02061799;
+
+  span {
+    font-size: 0.95rem;
+    line-height: 1;
+  }
 }
 
 .status {
@@ -266,6 +465,25 @@ const {
 }
 
 @media (max-width: 768px) {
+  .city-form {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 0;
+    width: 100%;
+  }
+
+  .city-input {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .city-button {
+    width: 100%;
+  }
+
   .forecast-strip {
     gap: 0.55rem;
     grid-auto-flow: column;
