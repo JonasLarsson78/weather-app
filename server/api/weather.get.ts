@@ -1,4 +1,8 @@
 export default defineEventHandler(async (event) => {
+  setHeader(event, 'Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+  setHeader(event, 'Pragma', 'no-cache')
+  setHeader(event, 'Expires', '0')
+
   const config = useRuntimeConfig()
   const query = getQuery(event)
 
@@ -26,6 +30,7 @@ export default defineEventHandler(async (event) => {
   try {
     const data = await $fetch(baseUrl, {
       query: { city },
+      cache: 'no-store',
       headers: {
         Authorization: `Bearer ${config.weatherApiKey}`,
       },
@@ -63,6 +68,7 @@ export default defineEventHandler(async (event) => {
   try {
     const data = await $fetch(baseUrl, {
       query: { city },
+      cache: 'no-store',
       headers: {
         'x-api-key': config.weatherApiKey,
       },

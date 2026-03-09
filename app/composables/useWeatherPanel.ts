@@ -6,6 +6,7 @@ export const useWeatherPanel = () => {
     default: () => [],
   })
   const city = ref(savedCity.value?.trim() || '')
+  const refreshToken = ref(Date.now())
 
   const formatCityName = (value: string) => {
     const trimmedValue = value.trim()
@@ -18,7 +19,10 @@ export const useWeatherPanel = () => {
   }
 
   const { data, pending, error, execute } = useFetch<WeatherResponse>('/api/weather', {
-    query: computed(() => ({ city: city.value })),
+    query: computed(() => ({
+      city: city.value,
+      refresh: refreshToken.value,
+    })),
     immediate: false,
     server: false,
     watch: false,
@@ -134,6 +138,7 @@ export const useWeatherPanel = () => {
 
     city.value = normalizedCity
     savedCity.value = normalizedCity
+    refreshToken.value = Date.now()
 
     await execute()
   }
