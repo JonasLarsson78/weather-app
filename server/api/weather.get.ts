@@ -33,17 +33,65 @@ export default defineEventHandler(async (event) => {
 
     return data
   } catch (error: any) {
-    if (error?.response?.status !== 401) {
-      throw error
+    const status = Number(
+      error?.statusCode
+      || error?.status
+      || error?.response?.status
+      || error?.data?.statusCode,
+    )
+
+    if (status === 401) {
+      // Fall back to x-api-key below
+    } else if (status === 404 || status === 500) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: city
+          ? `Staden "${city}" hittades inte.`
+          : 'Staden hittades inte.',
+      })
+    } else {
+      throw createError({
+        statusCode: status || 500,
+        statusMessage: error?.data?.statusMessage
+          || error?.statusMessage
+          || error?.message
+          || 'Kunde inte hämta väderdata från tjänsten.',
+      })
     }
   }
 
-  const data = await $fetch(baseUrl, {
-    query: { city },
-    headers: {
-      'x-api-key': config.weatherApiKey,
-    },
-  })
+  try {
+    const data = await $fetch(baseUrl, {
+      query: { city },
+      headers: {
+        'x-api-key': config.weatherApiKey,
+      },
+    })
 
-  return data
+    return data
+  } catch (error: any) {
+    const status = Number(
+      error?.statusCode
+      || error?.status
+      || error?.response?.status
+      || error?.data?.statusCode,
+    )
+
+    if (status === 404 || status === 500) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: city
+          ? `Staden "${city}" hittades inte.`
+          : 'Staden hittades inte.',
+      })
+    }
+
+    throw createError({
+      statusCode: status || 500,
+      statusMessage: error?.data?.statusMessage
+        || error?.statusMessage
+        || error?.message
+        || 'Kunde inte hämta väderdata från tjänsten.',
+    })
+  }
 })
