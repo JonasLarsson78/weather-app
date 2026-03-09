@@ -191,8 +191,50 @@ export const useWeatherPanel = () => {
     await fetchWeather()
   }
 
+  let lastForegroundRefreshAt = 0
+
+  const refreshWeatherOnForeground = async () => {
+    const now = Date.now()
+    const hasCity = city.value.trim().length > 0
+
+    if (!hasCity || pending.value) {
+      return
+    }
+
+    if (now - lastForegroundRefreshAt < 3_000) {
+      return
+    }
+
+    lastForegroundRefreshAt = now
+    await fetchWeather()
+  }
+
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      void refreshWeatherOnForeground()
+    }
+  }
+
+  const handleWindowFocus = () => {
+    void refreshWeatherOnForeground()
+  }
+
+  const handlePageShow = () => {
+    void refreshWeatherOnForeground()
+  }
+
   onMounted(() => {
-    fetchWeather()
+    void fetchWeather()
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleWindowFocus)
+    window.addEventListener('pageshow', handlePageShow)
+  })
+
+  onBeforeUnmount(() => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
+    window.removeEventListener('focus', handleWindowFocus)
+    window.removeEventListener('pageshow', handlePageShow)
   })
 
   return {
