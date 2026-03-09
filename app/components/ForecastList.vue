@@ -12,7 +12,7 @@
               <span class="time-label">{{ t.time }}</span>
               <span class="time-summary"><i :class="['forecast-icon', t.icon]"
                   :style="{ color: t.iconColor || '#fde68a' }" aria-hidden="true"></i> {{ t.temp
-                }}°C</span>
+                  }}°C</span>
             </div>
             <div class="time-meta">
               <span>Vind: {{ t.wind }} m/s</span>
