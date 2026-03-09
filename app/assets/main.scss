@@ -1,0 +1,12 @@
+@import 'weather-icons/css/weather-icons.css';
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap');
+body {
+  background:
+    radial-gradient(circle at 15% 10%, #ffffff10 0%, transparent 35%),
+    radial-gradient(circle at 85% 0%, #bfdbfe1a 0%, transparent 32%),
+    linear-gradient(180deg, #0b1020 0%, #111827 50%, #0f172a 100%);
+  color: #eff6ff;
+  min-height: 100vh;
+  margin: 0;
+  font-family: 'Fira Code', monospace;
+}
